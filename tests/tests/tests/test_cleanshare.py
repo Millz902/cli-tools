@@ -5,9 +5,17 @@ from io import StringIO
 from unittest.mock import patch, MagicMock
 import pytest
 
-# Import cleanshare module
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "tools" / "cleanshare"))
+# Import cleanshare module - path is already set up in conftest.py
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "tools" / "cleanshare"))
 from cleanshare import clean_url, clean_text, main  # type: ignore
+
+
+@pytest.fixture
+def mock_clipboard():
+    """Fixture to provide a mocked pyperclip module"""
+    mock_pyperclip = MagicMock()
+    with patch.dict('sys.modules', {'pyperclip': mock_pyperclip}):
+        yield mock_pyperclip
 
 def test_clean_url_removes_tracking_params():
     url = "https://example.com/page?utm_source=test&utm_medium=email&param=value"
@@ -102,21 +110,19 @@ def test_main_clipboard_without_pyperclip(capsys):
     assert "pyperclip is not installed" in captured.err
 
 
-def test_main_clipboard_url_mode(capsys):
+def test_main_clipboard_url_mode(capsys, mock_clipboard):
     """Test main() with --clipboard flag for URL cleaning"""
-    mock_pyperclip = MagicMock()
     test_url = "https://example.com/?utm_source=clipboard&param=keep"
-    mock_pyperclip.paste.return_value = test_url
+    mock_clipboard.paste.return_value = test_url
     
     with patch('sys.argv', ['cleanshare', '--clipboard']):
-        with patch.dict('sys.modules', {'pyperclip': mock_pyperclip}):
-            main()
+        main()
     
     # Verify paste was called
-    mock_pyperclip.paste.assert_called_once()
+    mock_clipboard.paste.assert_called_once()
     # Verify copy was called with cleaned URL
-    mock_pyperclip.copy.assert_called_once()
-    copied_text = mock_pyperclip.copy.call_args[0][0]
+    mock_clipboard.copy.assert_called_once()
+    copied_text = mock_clipboard.copy.call_args[0][0]
     assert "example.com" in copied_text
     assert "param=keep" in copied_text
     assert "utm_source" not in copied_text
@@ -125,19 +131,17 @@ def test_main_clipboard_url_mode(capsys):
     assert "Cleaned text copied back to clipboard" in captured.out
 
 
-def test_main_clipboard_text_mode(capsys):
+def test_main_clipboard_text_mode(capsys, mock_clipboard):
     """Test main() with --clipboard and --text flags"""
-    mock_pyperclip = MagicMock()
     test_text = "Check out https://site.com/?fbclid=abc123 for more info"
-    mock_pyperclip.paste.return_value = test_text
+    mock_clipboard.paste.return_value = test_text
     
     with patch('sys.argv', ['cleanshare', '--clipboard', '--text']):
-        with patch.dict('sys.modules', {'pyperclip': mock_pyperclip}):
-            main()
+        main()
     
-    mock_pyperclip.paste.assert_called_once()
-    mock_pyperclip.copy.assert_called_once()
-    copied_text = mock_pyperclip.copy.call_args[0][0]
+    mock_clipboard.paste.assert_called_once()
+    mock_clipboard.copy.assert_called_once()
+    copied_text = mock_clipboard.copy.call_args[0][0]
     assert "site.com" in copied_text
     assert "fbclid" not in copied_text
     
@@ -157,35 +161,31 @@ def test_main_short_text_flag(capsys):
     assert "utm_medium" not in output
 
 
-def test_main_short_clipboard_flag(capsys):
+def test_main_short_clipboard_flag(capsys, mock_clipboard):
     """Test main() with -c short flag"""
-    mock_pyperclip = MagicMock()
     test_url = "https://example.com/?gclid=test123"
-    mock_pyperclip.paste.return_value = test_url
+    mock_clipboard.paste.return_value = test_url
     
     with patch('sys.argv', ['cleanshare', '-c']):
-        with patch.dict('sys.modules', {'pyperclip': mock_pyperclip}):
-            main()
+        main()
     
-    mock_pyperclip.copy.assert_called_once()
-    copied_text = mock_pyperclip.copy.call_args[0][0]
+    mock_clipboard.copy.assert_called_once()
+    copied_text = mock_clipboard.copy.call_args[0][0]
     assert "gclid" not in copied_text
     
     captured = capsys.readouterr()
     assert "Cleaned text copied back to clipboard" in captured.out
 
 
-def test_main_combined_flags(capsys):
+def test_main_combined_flags(capsys, mock_clipboard):
     """Test main() with multiple flags combined"""
-    mock_pyperclip = MagicMock()
     test_text = "Links: https://a.com/?utm_id=1 and https://b.com/?ref=test"
-    mock_pyperclip.paste.return_value = test_text
+    mock_clipboard.paste.return_value = test_text
     
     with patch('sys.argv', ['cleanshare', '-c', '-t']):
-        with patch.dict('sys.modules', {'pyperclip': mock_pyperclip}):
-            main()
+        main()
     
-    copied_text = mock_pyperclip.copy.call_args[0][0]
+    copied_text = mock_clipboard.copy.call_args[0][0]
     assert "utm_id" not in copied_text
     assert "ref" not in copied_text
     assert "a.com" in copied_text
