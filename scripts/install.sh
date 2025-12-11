@@ -18,7 +18,12 @@ install_tool() {
 
   if [ -f "$path/requirements.txt" ]; then
     echo "  Installing Python dependencies..."
-    pip install -r "$path/requirements.txt"
+    if [ -z "$VIRTUAL_ENV" ]; then
+      echo "  ⚠️  Not in a Python virtual environment. Installing with --user to avoid polluting system packages."
+      pip install --quiet --user -r "$path/requirements.txt"
+    else
+      pip install --quiet -r "$path/requirements.txt"
+    fi
   fi
 
   chmod +x "$path/${tool}.py" 2>/dev/null || true

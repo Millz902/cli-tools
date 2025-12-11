@@ -17,7 +17,8 @@ def clean_url(url: str) -> str:
     """Remove tracking parameters from a single URL."""
     try:
         parsed = urlparse(url)
-    except Exception:
+    except ValueError as e:
+        print(f"[!] Failed to parse URL '{url}': {e}", file=sys.stderr)
         return url
     params = parse_qsl(parsed.query, keep_blank_values=True)
     kept = [(k, v) for (k, v) in params if k.lower() not in TRACKING_PARAMS]
@@ -44,7 +45,10 @@ def main():
             print("[!] pyperclip is not installed. Run: pip install pyperclip", file=sys.stderr)
             sys.exit(1)
         original = pyperclip.paste()
-        cleaned = clean_text(original) if args.text else clean_url(original.strip())
+        if args.text:
+            cleaned = clean_text(original)
+        else:
+            cleaned = clean_url(original.strip())
         pyperclip.copy(cleaned)
         print("✅ Cleaned text copied back to clipboard.")
         return
