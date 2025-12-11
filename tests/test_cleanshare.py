@@ -118,4 +118,3 @@ def test_cli_help():
     )
     assert result.returncode == 0
     assert "Clean tracking parameters" in result.stdout
-
