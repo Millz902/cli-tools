@@ -1,0 +1,27 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install dev deps
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+        # Install tool-specific dependencies
+        if [ -f tools/cleanshare/requirements.txt ]; then
+          pip install -r tools/cleanshare/requirements.txt
+        fi
+    - name: Run tests
+      run: |
+        pytest tests/ -v --cov=tools --cov-report=term
