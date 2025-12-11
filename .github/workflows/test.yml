@@ -11,17 +11,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
     - uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-    - name: Install dev deps
+
+    - name: Install dependencies
+      shell: bash
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
-        # Install tool-specific dependencies
-        if [ -f tools/cleanshare/requirements.txt ]; then
-          pip install -r tools/cleanshare/requirements.txt
+        # Install dev requirements if present
+        if [ -f requirements-dev.txt ]; then
+          echo "Installing requirements-dev.txt..."
+          pip install -r requirements-dev.txt
+        else
+          echo "requirements-dev.txt not found; skipping dev dependencies."
         fi
+        # Install tool-specific dependencies if present
+        if [ -f tools/cleanshare/requirements.txt ]; then
+          echo "Installing tools/cleanshare/requirements.txt..."
+          pip install -r tools/cleanshare/requirements.txt
+        else
+          echo "tools/cleanshare/requirements.txt not found; skipping tool dependencies."
+        fi
+
     - name: Run tests
       run: |
         pytest tests/ -v --cov=tools --cov-report=term
