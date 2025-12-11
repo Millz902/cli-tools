@@ -19,8 +19,7 @@ cli-tools/
 │       ├── requirements.txt # Tool-specific dependencies
 │       └── README.md      # Tool documentation
 ├── tests/                 # Test suite
-│   ├── __init__.py
-│   ├── conftest.py
+│   ├── conftest.py       # pytest configuration and fixtures
 │   └── test_*.py         # Test files
 ├── scripts/              # Installation and utility scripts
 │   └── install.sh        # Installation script
@@ -203,7 +202,7 @@ def test_function_error():
 - Be cautious with file system operations
 
 ## Additional Resources
-- [Python Style Guide (PEP 8)](https://pep8.org/)
+- [Python Style Guide (PEP 8)](https://www.python.org/dev/peps/pep-0008/)
 - [Docstring Conventions (PEP 257)](https://www.python.org/dev/peps/pep-0257/)
 - [pytest Documentation](https://docs.pytest.org/)
 - [Black Code Formatter](https://black.readthedocs.io/)
