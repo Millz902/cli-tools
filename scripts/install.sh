@@ -18,7 +18,15 @@ install_tool() {
 
   if [ -f "$path/requirements.txt" ]; then
     echo "  Installing Python dependencies..."
-    pip install -r "$path/requirements.txt"
+    
+    # Check if we're in a virtual environment
+    if [ -n "$VIRTUAL_ENV" ] || [ -n "$CONDA_DEFAULT_ENV" ]; then
+      echo "  ✓ Virtual environment detected, installing normally..."
+      pip install --quiet -r "$path/requirements.txt"
+    else
+      echo "  ⚠ Not in a virtual environment, installing to user site-packages..."
+      pip install --quiet --user -r "$path/requirements.txt"
+    fi
   fi
 
   chmod +x "$path/${tool}.py" 2>/dev/null || true

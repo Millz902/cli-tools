@@ -3,9 +3,9 @@ import sys
 from pathlib import Path
 import pytest
 
-# Add tools directory to Python path
-tools_dir = Path(__file__).parent.parent / "tools"
-sys.path.insert(0, str(tools_dir))
+# Add tools/cleanshare directory to Python path for imports
+repo_root = Path(__file__).parent.parent
+sys.path.insert(0, str(repo_root / "tools" / "cleanshare"))
 
 @pytest.fixture
 def sample_url():
