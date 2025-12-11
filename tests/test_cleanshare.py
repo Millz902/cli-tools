@@ -4,9 +4,11 @@ from pathlib import Path
 import subprocess
 import pytest
 
-# Import cleanshare module
-sys.path.insert(0, str(Path(__file__).parent.parent / "tools" / "cleanshare"))
+# Import cleanshare module - path already set up in conftest.py
 from cleanshare import clean_url, clean_text, main  # type: ignore
+
+# Path to the cleanshare script for CLI tests
+CLEANSHARE_SCRIPT = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
 
 def test_clean_url_removes_tracking_params():
     url = "https://example.com/page?utm_source=test&utm_medium=email&param=value"
@@ -71,9 +73,8 @@ def test_clean_text_with_fixtures(sample_text_with_urls):
 # CLI Integration Tests
 def test_cli_single_url():
     """Test CLI with a single URL argument"""
-    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
     result = subprocess.run(
-        [sys.executable, str(script_path), "https://example.com/?utm_source=test&id=123"],
+        [sys.executable, str(CLEANSHARE_SCRIPT), "https://example.com/?utm_source=test&id=123"],
         capture_output=True,
         text=True
     )
@@ -83,10 +84,9 @@ def test_cli_single_url():
 
 def test_cli_text_mode():
     """Test CLI with --text flag"""
-    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
     text_input = "Check https://example.com/?utm_source=test"
     result = subprocess.run(
-        [sys.executable, str(script_path), "--text", text_input],
+        [sys.executable, str(CLEANSHARE_SCRIPT), "--text", text_input],
         capture_output=True,
         text=True
     )
@@ -96,10 +96,9 @@ def test_cli_text_mode():
 
 def test_cli_stdin():
     """Test CLI reading from stdin"""
-    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
     url = "https://example.com/?utm_source=test&id=456"
     result = subprocess.run(
-        [sys.executable, str(script_path)],
+        [sys.executable, str(CLEANSHARE_SCRIPT)],
         input=url,
         capture_output=True,
         text=True
@@ -110,9 +109,8 @@ def test_cli_stdin():
 
 def test_cli_help():
     """Test CLI help message"""
-    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
     result = subprocess.run(
-        [sys.executable, str(script_path), "--help"],
+        [sys.executable, str(CLEANSHARE_SCRIPT), "--help"],
         capture_output=True,
         text=True
     )
