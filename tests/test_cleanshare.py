@@ -31,7 +31,7 @@ def test_clean_url_only_tracking_params():
     """Test URL with only tracking parameters (no query string after cleaning)."""
     url = "https://example.com/page?utm_source=test&fbclid=123"
     result = clean_url(url)
-    assert "?" not in result or result.endswith("?")
+    assert "?" not in result
     assert "utm_source" not in result
     assert "fbclid" not in result
 
