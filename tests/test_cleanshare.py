@@ -125,12 +125,13 @@ def test_whitespace_handling_text_mode():
     script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
     text_with_whitespace = "  Visit https://example.com/?utm_source=test and enjoy  "
     result = subprocess.run(
-        [sys.executable, str(script_path), "--text", text_with_whitespace],
+        [sys.executable, str(script_path), "--text"],
+        input=text_with_whitespace,
         capture_output=True,
         text=True
     )
     assert result.returncode == 0
-    # Leading/trailing whitespace should be preserved in text mode
-    assert result.stdout.strip().startswith("Visit") or "  Visit" in result.stdout
+    # Leading/trailing whitespace should be preserved in text mode (when from stdin)
+    assert result.stdout.startswith("  Visit")
     assert "utm_source" not in result.stdout
     assert "example.com" in result.stdout
