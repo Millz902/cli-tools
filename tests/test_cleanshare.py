@@ -1,11 +1,6 @@
 """Tests for cleanshare tool"""
 
-import sys
-from pathlib import Path
-
-# Import cleanshare module
-sys.path.insert(0, str(Path(__file__).parent.parent / "tools" / "cleanshare"))
-from cleanshare import clean_url, clean_text  # type: ignore  # noqa: E402
+from cleanshare import clean_url, clean_text  # type: ignore
 
 
 def test_clean_url_removes_tracking_params():

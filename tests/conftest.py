@@ -7,6 +7,7 @@ import pytest
 # Add tools directory to Python path
 tools_dir = Path(__file__).parent.parent / "tools"
 sys.path.insert(0, str(tools_dir))
+sys.path.insert(0, str(tools_dir / "cleanshare"))
 
 
 @pytest.fixture
