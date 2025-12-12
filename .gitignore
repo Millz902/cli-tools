@@ -4,8 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-
-# Build artifacts
 build/
 develop-eggs/
 dist/
@@ -29,11 +27,7 @@ htmlcov/
 .tox/
 .nox/
 
-# Type checking
-.mypy_cache/
-
 # Virtual environments
-.venv/
 venv/
 ENV/
 env/
@@ -45,6 +39,6 @@ env/
 *.swo
 *~
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
