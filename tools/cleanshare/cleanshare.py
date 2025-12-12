@@ -17,12 +17,14 @@ def clean_url(url: str) -> str:
     """Remove tracking parameters from a single URL."""
     try:
         parsed = urlparse(url)
-    except Exception:
+        params = parse_qsl(parsed.query, keep_blank_values=True)
+        kept = [(k, v) for (k, v) in params if k.lower() not in TRACKING_PARAMS]
+        query = urlencode(kept, doseq=True)
+        return urlunparse(parsed._replace(query=query))
+    except Exception as e:
+        # Catch any unexpected errors in URL processing
+        print(f"[!] Failed to process URL '{url}': {e}", file=sys.stderr)
         return url
-    params = parse_qsl(parsed.query, keep_blank_values=True)
-    kept = [(k, v) for (k, v) in params if k.lower() not in TRACKING_PARAMS]
-    query = urlencode(kept, doseq=True)
-    return urlunparse(parsed._replace(query=query))
 
 def clean_text(text: str) -> str:
     """Find all URLs in a text block and clean them."""
@@ -44,7 +46,10 @@ def main():
             print("[!] pyperclip is not installed. Run: pip install pyperclip", file=sys.stderr)
             sys.exit(1)
         original = pyperclip.paste()
-        cleaned = clean_text(original) if args.text else clean_url(original.strip())
+        if args.text:
+            cleaned = clean_text(original)
+        else:
+            cleaned = clean_url(original.strip())
         pyperclip.copy(cleaned)
         print("✅ Cleaned text copied back to clipboard.")
         return
