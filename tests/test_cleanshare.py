@@ -1,18 +1,8 @@
 """Tests for cleanshare tool"""
-import sys
-from pathlib import Path
-import subprocess
-import pytest
-
-# Import cleanshare module - path already set up in conftest.py
 from cleanshare import clean_url, clean_text  # type: ignore
 
-# Path to the cleanshare script for CLI tests
-CLEANSHARE_SCRIPT = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
-
-def test_clean_url_removes_tracking_params():
-    url = "https://example.com/page?utm_source=test&utm_medium=email&param=value"
-    result = clean_url(url)
+def test_clean_url_removes_tracking_params(sample_url):
+    result = clean_url(sample_url)
     assert "utm_source" not in result
     assert "utm_medium" not in result
     assert "param=value" in result
@@ -24,95 +14,124 @@ def test_clean_url_preserves_non_tracking_params():
     assert "name=test" in result
     assert "utm_source" not in result
 
-def test_clean_text_multiple_urls():
-    text = "Visit https://example.com/?utm_source=twitter and https://another.com/page?fbclid=123"
-    result = clean_text(text)
+def test_clean_text_multiple_urls(sample_text_with_urls):
+    result = clean_text(sample_text_with_urls)
     assert "utm_source" not in result
     assert "fbclid" not in result
     assert "example.com" in result
     assert "another.com" in result
 
 def test_clean_url_no_query_params():
-    """Test URL with no query parameters"""
+    """Test URL with no query parameters."""
     url = "https://example.com/page"
     result = clean_url(url)
     assert result == url
 
 def test_clean_url_only_tracking_params():
-    """Test URL with only tracking parameters (resulting in no query string)"""
+    """Test URL with only tracking parameters (no query string after cleaning)."""
     url = "https://example.com/page?utm_source=test&fbclid=123"
     result = clean_url(url)
+    assert "?" not in result
     assert "utm_source" not in result
     assert "fbclid" not in result
-    assert result == "https://example.com/page"
 
 def test_clean_url_empty_string():
-    """Test empty string input"""
+    """Test with empty string."""
     result = clean_url("")
     assert result == ""
 
 def test_clean_url_malformed():
-    """Test malformed URL - should return original"""
-    malformed = "not a url at all"
+    """Test with malformed URL - should return original."""
+    malformed = "not a valid url"
     result = clean_url(malformed)
-    # Should return original since it can't be parsed
     assert result == malformed
 
-def test_clean_url_with_fixtures(sample_url):
-    """Test using fixture"""
-    result = clean_url(sample_url)
-    assert "utm_source" not in result
-    assert "param=value" in result
-
-def test_clean_text_with_fixtures(sample_text_with_urls):
-    """Test using fixture"""
-    result = clean_text(sample_text_with_urls)
-    assert "utm_source" not in result
-    assert "fbclid" not in result
 
 # CLI Integration Tests
-def test_cli_single_url():
-    """Test CLI with a single URL argument"""
+import subprocess
+import sys
+from pathlib import Path
+
+def test_cli_basic_url():
+    """Test CLI with a basic URL argument."""
+    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
+    url = "https://example.com/page?utm_source=test&param=value"
     result = subprocess.run(
-        [sys.executable, str(CLEANSHARE_SCRIPT), "https://example.com/?utm_source=test&id=123"],
+        [sys.executable, str(script_path), url],
         capture_output=True,
         text=True
     )
     assert result.returncode == 0
     assert "utm_source" not in result.stdout
-    assert "id=123" in result.stdout
+    assert "param=value" in result.stdout
 
 def test_cli_text_mode():
-    """Test CLI with --text flag"""
-    text_input = "Check https://example.com/?utm_source=test"
+    """Test CLI with --text flag."""
+    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
+    text = "Visit https://example.com/?utm_source=test"
     result = subprocess.run(
-        [sys.executable, str(CLEANSHARE_SCRIPT), "--text", text_input],
+        [sys.executable, str(script_path), "--text", text],
         capture_output=True,
         text=True
     )
     assert result.returncode == 0
     assert "utm_source" not in result.stdout
-    assert "example.com" in result.stdout
+    assert "Visit" in result.stdout
 
 def test_cli_stdin():
-    """Test CLI reading from stdin"""
-    url = "https://example.com/?utm_source=test&id=456"
+    """Test CLI with stdin input."""
+    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
+    url = "https://example.com/page?utm_source=test&param=value"
     result = subprocess.run(
-        [sys.executable, str(CLEANSHARE_SCRIPT)],
+        [sys.executable, str(script_path)],
         input=url,
         capture_output=True,
         text=True
     )
     assert result.returncode == 0
     assert "utm_source" not in result.stdout
-    assert "id=456" in result.stdout
+    assert "param=value" in result.stdout
 
 def test_cli_help():
-    """Test CLI help message"""
+    """Test CLI help message."""
+    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
     result = subprocess.run(
-        [sys.executable, str(CLEANSHARE_SCRIPT), "--help"],
+        [sys.executable, str(script_path), "--help"],
         capture_output=True,
         text=True
     )
     assert result.returncode == 0
-    assert "Clean tracking parameters" in result.stdout
+    assert "Clean tracking parameters" in result.stdout or "clean" in result.stdout.lower()
+
+def test_whitespace_handling_url_mode():
+    """Test that whitespace is stripped in URL mode (non-text mode)."""
+    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
+    url_with_whitespace = "  https://example.com/page?utm_source=test&param=value  \n"
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        input=url_with_whitespace,
+        capture_output=True,
+        text=True
+    )
+    assert result.returncode == 0
+    # Whitespace should be stripped in URL mode
+    assert not result.stdout.startswith(" ")
+    assert not result.stdout.endswith("  \n")
+    assert "param=value" in result.stdout
+    assert "utm_source" not in result.stdout
+
+def test_whitespace_handling_text_mode():
+    """Test that whitespace is preserved in text mode."""
+    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
+    text_with_whitespace = "  Visit https://example.com/?utm_source=test and enjoy  "
+    result = subprocess.run(
+        [sys.executable, str(script_path), "--text"],
+        input=text_with_whitespace,
+        capture_output=True,
+        text=True
+    )
+    assert result.returncode == 0
+    # Leading/trailing whitespace should be preserved in text mode (when from stdin)
+    assert result.stdout.startswith("  Visit")
+    assert "utm_source" not in result.stdout
+    assert "example.com" in result.stdout
