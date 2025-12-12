@@ -17,13 +17,13 @@ def clean_url(url: str) -> str:
     """Remove tracking parameters from a single URL."""
     try:
         parsed = urlparse(url)
-    except ValueError as e:
-        print(f"[!] Failed to parse URL '{url}': {e}", file=sys.stderr)
+        params = parse_qsl(parsed.query, keep_blank_values=True)
+        kept = [(k, v) for (k, v) in params if k.lower() not in TRACKING_PARAMS]
+        query = urlencode(kept, doseq=True)
+        return urlunparse(parsed._replace(query=query))
+    except Exception as e:
+        print(f"[!] Failed to process URL '{url}': {e}", file=sys.stderr)
         return url
-    params = parse_qsl(parsed.query, keep_blank_values=True)
-    kept = [(k, v) for (k, v) in params if k.lower() not in TRACKING_PARAMS]
-    query = urlencode(kept, doseq=True)
-    return urlunparse(parsed._replace(query=query))
 
 def clean_text(text: str) -> str:
     """Find all URLs in a text block and clean them."""

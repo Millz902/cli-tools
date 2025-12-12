@@ -102,3 +102,35 @@ def test_cli_help():
     )
     assert result.returncode == 0
     assert "Clean tracking parameters" in result.stdout or "clean" in result.stdout.lower()
+
+def test_whitespace_handling_url_mode():
+    """Test that whitespace is stripped in URL mode (non-text mode)."""
+    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
+    url_with_whitespace = "  https://example.com/page?utm_source=test&param=value  \n"
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        input=url_with_whitespace,
+        capture_output=True,
+        text=True
+    )
+    assert result.returncode == 0
+    # Whitespace should be stripped in URL mode
+    assert not result.stdout.startswith(" ")
+    assert not result.stdout.endswith("  \n")
+    assert "param=value" in result.stdout
+    assert "utm_source" not in result.stdout
+
+def test_whitespace_handling_text_mode():
+    """Test that whitespace is preserved in text mode."""
+    script_path = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"
+    text_with_whitespace = "  Visit https://example.com/?utm_source=test and enjoy  "
+    result = subprocess.run(
+        [sys.executable, str(script_path), "--text", text_with_whitespace],
+        capture_output=True,
+        text=True
+    )
+    assert result.returncode == 0
+    # Leading/trailing whitespace should be preserved in text mode
+    assert result.stdout.strip().startswith("Visit") or "  Visit" in result.stdout
+    assert "utm_source" not in result.stdout
+    assert "example.com" in result.stdout
