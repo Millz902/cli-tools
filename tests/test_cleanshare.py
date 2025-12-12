@@ -5,7 +5,7 @@ import subprocess
 import pytest
 
 # Import cleanshare module - path already set up in conftest.py
-from cleanshare import clean_url, clean_text, main  # type: ignore
+from cleanshare import clean_url, clean_text  # type: ignore
 
 # Path to the cleanshare script for CLI tests
 CLEANSHARE_SCRIPT = Path(__file__).parent.parent / "tools" / "cleanshare" / "cleanshare.py"

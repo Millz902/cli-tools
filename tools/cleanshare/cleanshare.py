@@ -22,8 +22,7 @@ def clean_url(url: str) -> str:
         query = urlencode(kept, doseq=True)
         return urlunparse(parsed._replace(query=query))
     except Exception as e:
-        # urlparse rarely raises exceptions, but catch any unexpected errors
-        # in the URL processing pipeline (parse_qsl, urlencode, urlunparse)
+        # Catch any unexpected errors in URL processing
         print(f"[!] Failed to process URL '{url}': {e}", file=sys.stderr)
         return url
 
