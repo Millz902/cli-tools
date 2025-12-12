@@ -21,7 +21,7 @@ def clean_url(url: str) -> str:
         kept = [(k, v) for (k, v) in params if k.lower() not in TRACKING_PARAMS]
         query = urlencode(kept, doseq=True)
         return urlunparse(parsed._replace(query=query))
-    except Exception as e:
+    except (TypeError, AttributeError, ValueError) as e:
         print(f"[!] Failed to process URL '{url}': {e}", file=sys.stderr)
         return url
 
